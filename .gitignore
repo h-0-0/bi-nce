@@ -1,0 +1,14 @@
+/.venv
+/__pycache__/
+
+/mnist/__pycache__/
+/mnist/data
+/mnist/results
+/mnist/viz
+/mnist/slurm*
+
+/sim/__pycache__/
+/sim/data
+/sim/results
+/sim/viz
+/sim/slurm*
