@@ -12,3 +12,9 @@
 /sim/results
 /sim/viz
 /sim/slurm*
+
+/permuted_mnist/__pycache__/
+/permuted_mnist/data
+/permuted_mnist/results
+/permuted_mnist/viz
+/permuted_mnist/slurm*
