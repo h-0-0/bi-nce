@@ -5,8 +5,8 @@
 #SBATCH --ntasks=1                         # Number of tasks (cores)
 #SBATCH --cpus-per-task=1                  # Number of CPU cores per task
 #SBATCH --gres=gpu:1                       # Define number of GPUs per node, can also define type of GPU eg. gpu:tesla, gpu:k80, gpu:p100, gpu:v100
-#SBATCH --mem-per-gpu=2G                   # Define memory per GPU
-#SBATCH --time=05:00:00                    # Wall time (hh:mm:ss)
+#SBATCH --mem-per-gpu=5G                   # Define memory per GPU
+#SBATCH --time=20:00:00                    # Wall time (hh:mm:ss)
 #SBATCH --mail-user=jd18380@bristol.ac.uk  # Email address for job notifications
 #SBATCH --mail-type=END                    # Email notifications (BEGIN, END, FAIL)
 

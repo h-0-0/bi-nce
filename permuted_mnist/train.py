@@ -1,4 +1,4 @@
-from data import get_bi_mnist, get_tri_mnist
+from data import get_permuted_mnist
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -15,7 +15,7 @@ def train(**kwargs):
     Train the model using the specified estimator.
 
     Args:
-        benchmark: Literal['bi_mnist'] (dataset to use)
+        benchmark: Literal['permuted_mnist'] (dataset to use)
         model: Literal['MLP'] (model to train)
         learning_rate: float (learning rate for optimizer)
         num_epochs: int (number of epochs to train for)
@@ -53,33 +53,25 @@ def train(**kwargs):
     # Check if CUDA is available and set the device accordingly
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"--- Using {device} device ---", flush=True)
-    print(f"--- Using following config {kwargs} ---", flush=True)
+    print(f"--- Running config: {kwargs} ---", flush=True)
             
     # Generate / Load in the data
-    if benchmark == "bi_mnist":
-        train_loader, test_loader = get_bi_mnist(batch_size=batch_size, t_encoding=t_encoding)
-    elif benchmark == "tri_mnist":
-        train_loader, test_loader = get_tri_mnist(batch_size=batch_size, t_encoding=t_encoding)
+    if benchmark == "permuted_mnist":
+        train_loader, test_loader = get_permuted_mnist(batch_size=batch_size, t_encoding=t_encoding)
     else:
         raise ValueError("Invalid benchmark")
 
     # Define the model and optimizer
     if t_encoding == "one_hot":
-        if benchmark == "bi_mnist":
-            task_dim=2
-            num_tasks=2
-        elif benchmark == "tri_mnist":
-            task_dim=3
-            num_tasks=3
+        if benchmark == "permuted_mnist":
+            num_tasks = 10
+            task_dim = 10
         else:
             raise ValueError("Invalid benchmark")
     elif t_encoding == "repeated":
-        if benchmark == "bi_mnist":
-            task_dim=500
-            num_tasks=2
-        elif benchmark == "tri_mnist":
-            task_dim=600
-            num_tasks=3
+        if benchmark == "permuted_mnist":
+            num_tasks = 10
+            task_dim = 200
         else:
             raise ValueError("Invalid benchmark")
     else:
@@ -135,8 +127,8 @@ def train(**kwargs):
                 print("NaNs encountered, stopping training", flush=True)
                 return losses, model
         
+        # Print progress
         if (epoch + 1) % 25 == 0:
-            # Print progress
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}', flush=True)
 
 
@@ -240,7 +232,7 @@ if __name__ == "__main__":
     parser.add_argument('--default_exp_name', type=str, help='Name of the example experiment you want to run, either "bi_nce" or "info_nce"', default="info_nce")
     args = parser.parse_args()
     config = {
-        'benchmark': 'tri_mnist',
+        'benchmark': 'permuted_mnist',
         'model': 'MLP',
         'learning_rate': 1e-7,
         'num_epochs': 1,
@@ -249,7 +241,7 @@ if __name__ == "__main__":
         'patience': 5,
         'net_structure': [1, 1024, 40],
         'temperature': 0.1,
-        't_encoding': 'one_hot',
+        't_encoding': 'repeated',
     }
     # Train the model
     losses, model = train(**config)

@@ -2,26 +2,26 @@ import slune
 
 if  __name__ == "__main__":
     to_search_bi = {
-        'benchmark': ['bi_mnist', 'tri_mnist'],
+        'benchmark': ['permuted_mnist'],
         'model': ['MLP'], # FunnelMLP
         'learning_rate': [1e-4, 1e-6],
         'num_epochs': [150],
-        'batch_size': [512, 1024],
+        'batch_size': [512],
         'est': ['bi_nce'],
-        'patience': [10],
+        'patience': [5],
         'temperature': [0.01, 0.1],
         't_encoding': ['one_hot', 'repeated'],
     }
     grid_bi = slune.searchers.SearcherGrid(to_search_bi)
 
     to_search_info = {
-        'benchmark': ['bi_mnist', 'tri_mnist'],
+        'benchmark': ['permuted_mnist'],
         'model': ['MLP'], # FunnelMLP
         'learning_rate': [1e-4, 1e-6],
         'num_epochs': [150],
-        'batch_size': [512, 1024],
+        'batch_size': [512],
         'est': ['info_nce'],
-        'patience': [10],
+        'patience': [5],
         'temperature': [0.01, 0.1],
         't_encoding': ['one_hot'],
     }

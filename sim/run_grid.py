@@ -17,15 +17,15 @@ if  __name__ == "__main__":
     parser.add_argument('--my', type=int, help='Number of possible values for y', default=100)
     parser.add_argument('--model', type=str, help='Model to use', default="multi_softmax")
     parser.add_argument('--est', type=str, help='Estimator to use', default="mle")
-    parser.add_argument('--patience', type=int, help='Patience for early stopping', default=10)
-    parser.add_argument('--K', type=int, help='Number of negative samples for task NCE', default=10)
+    parser.add_argument('--patience', type=int, help='Patience for early stopping', default=20)
+    parser.add_argument('--K', type=int, help='Number of negative samples for bi-NCE', default=10)
     parser.add_argument('--num_epochs', type=int, help='Number of epochs to train for', default=5000)
     args = parser.parse_args()
 
     if args.est == 'mle':
-        lrs = [1e-2]
-    elif args.est == 'task_nce':
-        lrs = [1e-1, 1e-2, 1e-3]
+        lrs = [1, 5e-1, 1e-1]
+    elif args.est == 'bi_nce':
+        lrs = [5e-1, 1e-1]
     else:
         raise ValueError(f"Estimator {args.est} not supported")
     to_search = {
@@ -40,14 +40,14 @@ if  __name__ == "__main__":
         "est": [args.est],
         "patience": [args.patience],
         "K": [args.K],
-        "num_epochs": [5000],
+        "num_epochs": [15000],
 
         # These are the parameters we want to search over
         "learning_rate": lrs,
-        "batch_size": [64, 128, 512, args.n_train],
+        "batch_size": [32, args.n_train],
     }
     saver = slune.get_csv_saver(root_dir='results') 
-    grid = slune.searchers.SearcherGrid(to_search, runs=1) 
+    grid = slune.searchers.SearcherGrid(to_search, runs=20) 
     grid.check_existing_runs(saver) 
     # Perform grid search
     for args in grid: 

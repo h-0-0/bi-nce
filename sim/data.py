@@ -5,11 +5,10 @@ from torch.utils.data import TensorDataset
 
 def get_xt(n_train: int, n_test: int, d: int, mx: int, mt: int) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Define mt gaussians in R^d, for each of the mt gaussians get mx samples.
-    The mean of the i-th Gaussian is the vector of all i's.
+    Define a gaussian in R^d then retrieve mx samples from it to create the feature space.
     The covariance matrix is the identity matrix scaled by epsilon.
     Uniformly get n samples of t from [0, ..., mt-1],
-    and get n samples of x where we get the i-th x is sampled from the set coming from the t[i]-th Gaussian.
+    and get n samples of x from our feature space.
     Return the samples of x and t.
 
     Args:
@@ -28,22 +27,22 @@ def get_xt(n_train: int, n_test: int, d: int, mx: int, mt: int) -> Tuple[np.ndar
 
     """
     epsilon = 0.1
-    # Define the means of the mt Gaussians
-    means = np.array([np.full(d, i) for i in range(mt)])
+    # Define the means of the Gaussian
+    mean = np.array(np.full(d, 0))
 
     # Define the covariance matrix
     s = np.eye(d) * epsilon
 
-    # For each Gaussian, draw mx samples
-    samples = [np.array([np.random.multivariate_normal(mean=mean, cov=s) for _ in range(mx)]) for mean in means]
+    # Draw mx samples from the Gaussian to create the feature space
+    samples = np.array([np.random.multivariate_normal(mean=mean, cov=s) for _ in range(mx)])
 
     # Uniformly sample n values of t from [0, ..., mt-1]
     train_t = np.random.randint(0, mt, n_train)
     test_t = np.random.randint(0, mt, n_test)
 
-    # For each t[i], sample an x from the set of samples that came from the t[i]-th Gaussian
-    train_x = np.array([samples[t_i][np.random.randint(0, mx)] for t_i in train_t])
-    test_x = np.array([samples[t_i][np.random.randint(0, mx)] for t_i in test_t])
+    # Sample n_train and n_test samples from the feature space
+    train_x = samples[np.random.choice(mx, n_train)]
+    test_x = samples[np.random.choice(mx, n_test)]
 
     return train_x, train_t, test_x, test_t, samples
 

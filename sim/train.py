@@ -47,8 +47,8 @@ def negative_log_likelihood(model, x, t, y, *args):
     output = model(x, t)
     return -torch.log(output[torch.arange(len(output)), y] + 1e-20).mean()
 
-# Define the task NCE loss
-def task_nce_loss(model, x, t, y, K):
+# Define the bi-NCE loss
+def bi_nce_loss(model, x, t, y, K):
     # Compute scores for 'real' samples
     out = model(x, t)
     real_scores = out[torch.arange(out.shape[0]), y] + 1e-20
@@ -56,8 +56,10 @@ def task_nce_loss(model, x, t, y, K):
     # Sample from p_{N} (noise distribution) and compute scores for 'fake'/'negative' samples
     # we use p_{N} ~ U(0, my-1) 
     y_noise = torch.randint(low=0, high=out.shape[1], size=(K, out.shape[0]))
-    noise_scores = [out[torch.arange(out.shape[0]), y_noise[i]] + 1e-20 for i in range(y_noise.shape[0])]
-    sum_noise_scores = torch.stack(noise_scores).sum(dim=0)
+    noise_scores = torch.stack([out[torch.arange(out.shape[0]), y_noise[i]] + 1e-20 for i in range(y_noise.shape[0])])
+    log_noise_pdf = torch.log((1/out.shape[1]) * torch.ones_like(noise_scores))
+    noise_scores = torch.exp(noise_scores - log_noise_pdf)
+    sum_noise_scores = noise_scores.sum(dim=0)
 
     # Compute the loss
     return -torch.log(real_scores / sum_noise_scores).mean()
@@ -78,8 +80,8 @@ def train(**kwargs):
         learning_rate: float (learning rate for optimizer)
         num_epochs: int (number of epochs to train for)
         batch_size: int (batch size for training, if None, use full dataset)
-        est: Literal['mle', 'task_nce'] (estimator to use)
-        K: int (number of negative samples to use for task_nce, ignored if est != 'task_nce')
+        est: Literal['mle', 'bi_nce'] (estimator to use)
+        K: int (number of negative samples to use for bi_nce, ignored if est != 'bi_nce')
         patience: int (number of epochs to wait before early stopping)
 
     Returns:
@@ -126,9 +128,9 @@ def train(**kwargs):
     # Define the loss function based on the estimator
     if est == "mle":
         loss_fun = negative_log_likelihood
-    elif est == "task_nce":
+    elif est == "bi_nce":
         assert K is not None
-        loss_fun = task_nce_loss
+        loss_fun = bi_nce_loss
     else:
         raise ValueError("Invalid est(imator)")
     
@@ -166,12 +168,12 @@ def train(**kwargs):
 
             # If we have NaNs, stop training
             if torch.isnan(loss):
-                print("NaNs encountered, stopping training")
+                print("NaNs encountered, stopping training", flush=True)
                 return losses, accuracies, true_theta, model
         
         # Print progress
-        if (epoch + 1) % 5 == 0:
-            print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+        if (epoch + 1) % 50 == 0:
+            print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}', flush=True)
 
         # Test the model
         with torch.no_grad():
@@ -181,7 +183,7 @@ def train(**kwargs):
             writer.add_scalar('Accuracy/test', accuracy.item(), cum_b)
             saver.log({'test_accuracy': accuracy.item()})
             if (epoch + 1) % 5 == 0:
-                print(f'Accuracy of the model on the test set: {accuracy.item():.4f}')
+                print(f'Accuracy of the model on the test set: {accuracy.item():.4f}', flush=True)
 
         # Early stopping
         if loss.item() < best_loss:
@@ -190,7 +192,7 @@ def train(**kwargs):
         else:
             patience_counter += 1
             if patience_counter >= patience:
-                print("Early stopping")
+                print("Early stopping", flush=True)
                 break
 
     # Calculate the KL divergence between the true and estimated parameters
@@ -206,8 +208,8 @@ def train(**kwargs):
         estimated_log_p = model(x, t, log=True)
         # Calculate the KL divergence between the true and estimated log probabilities
         kl_divergence = F.kl_div(true_log_p, estimated_log_p, reduction='batchmean', log_target=True)
-    print(f"KL Divergence: {kl_divergence}")
-    saver.log({'kl_divergence': kl_divergence})
+    print(f"KL Divergence: {kl_divergence}", flush=True)
+    saver.log({'kl_divergence': kl_divergence.item()})
     writer.add_scalar('KL Divergence', kl_divergence)
 
     saver.save_collated()
@@ -216,13 +218,13 @@ def train(**kwargs):
 # Main function used to execute a training example and visualize results, use --default_exp_name to specify which example to run
 # Use: python train.py --default_exp_name=mle
     # To run the MLE example
-# Use: python train.py --default_exp_name=task_nce
-    # To run the task NCE example
+# Use: python train.py --default_exp_name=bi_nce
+    # To run the bi-NCE example
 if __name__ == "__main__":
     #  Parse input from command line
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--default_exp_name', type=str, help='Name of the example experiment you want to run, either "mle" or "task_nce"', default="mle")
+    parser.add_argument('--default_exp_name', type=str, help='Name of the example experiment you want to run, either "mle" or "bi_nce"', default="mle")
     args = parser.parse_args()
     config = {
         "n_train": 16000,

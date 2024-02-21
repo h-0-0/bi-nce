@@ -1,12 +1,12 @@
 #!/bin/bash
-#SBATCH --job-name=sim                     # Job name
+#SBATCH --job-name=permuted_mnist                     # Job name
 #SBATCH --partition=gpu                    # Specify the partition/queue name
 #SBATCH --nodes=1                          # Number of nodes
 #SBATCH --ntasks=1                         # Number of tasks (cores)
 #SBATCH --cpus-per-task=1                  # Number of CPU cores per task
 #SBATCH --gres=gpu:1                       # Define number of GPUs per node, can also define type of GPU eg. gpu:tesla, gpu:k80, gpu:p100, gpu:v100
-#SBATCH --mem-per-gpu=4G                   # Define memory per GPU
-#SBATCH --time=20:00:00                    # Wall time (hh:mm:ss)
+#SBATCH --mem-per-gpu=5G                   # Define memory per GPU
+#SBATCH --time=18:00:00                    # Wall time (hh:mm:ss)
 #SBATCH --mail-user=jd18380@bristol.ac.uk  # Email address for job notifications
 #SBATCH --mail-type=END                    # Email notifications (BEGIN, END, FAIL)
 

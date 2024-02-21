@@ -10,7 +10,7 @@ import torch
 if  __name__ == "__main__":
     # Parse input from command line
     parser = argparse.ArgumentParser()
-    parser.add_argument('--benchmark', type=str, help='Name of the benchmark to use', default="bi_mnist")
+    parser.add_argument('--benchmark', type=str, help='Name of the benchmark to use', default="permuted_mnist")
     parser.add_argument('--model', type=str, help='Model to use', default="MLP")
     parser.add_argument('--learning_rate', type=float, help='Learning rate to use', default=0.01)
     parser.add_argument('--num_epochs', type=int, help='Number of epochs to train for', default=50)
@@ -36,9 +36,8 @@ if  __name__ == "__main__":
     net_search = {
         'num_layers': [1, 2],
         'hidden_dim': [1024, 2048],
-        'output_dim': [40, 80]
+        'output_dim': [40, 80, 160]
     }
-    
     grid = slune.searchers.SearcherGrid(net_search)
     for net in grid:
         # Add the net to the config
